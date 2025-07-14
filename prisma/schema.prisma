@@ -33,17 +33,33 @@ model SubscriptionPlan {
   subscriptions    Subscription[]
 }
 
+// model Subscription {
+//   id        String   @id @default(uuid())
+//   user      User     @relation(fields: [userId], references: [id])
+//   userId    String
+//   subscriptionPlan      SubscriptionPlan     @relation(fields: [subscriptionPlanId], references: [id])
+//   subscriptionPlanId    String
+//   startDate DateTime @default(now())
+//   endDate   DateTime @default(now())
+//   status    SubscriptionStatus   @default(PENDING) 
+//   createdAt DateTime @default(now())
+// }
 model Subscription {
-  id        String   @id @default(uuid())
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  subscriptionPlan      SubscriptionPlan     @relation(fields: [subscriptionPlanId], references: [id])
-  subscriptionPlanId    String
-  startDate DateTime @default(now())
-  endDate   DateTime @default(now())
-  status    SubscriptionStatus   @default(PENDING) 
-  createdAt DateTime @default(now())
+  id                     String               @id @default(uuid())
+  user                   User                 @relation(fields: [userId], references: [id])
+  userId                 String
+  subscriptionPlan       SubscriptionPlan     @relation(fields: [subscriptionPlanId], references: [id])
+  subscriptionPlanId     String
+  startDate              DateTime             @default(now())
+  endDate                DateTime             @default(now())
+  status                 SubscriptionStatus   @default(PENDING)
+  stripeSubscriptionId   String?  @unique            // NEW
+  stripeCustomerId       String?              // NEW
+  stripeCheckoutSessionId String?             // NEW
+  cancelAtPeriodEnd      Boolean?             // NEW
+  createdAt              DateTime             @default(now())
 }
+
 
 enum Role {
   ADMIN
