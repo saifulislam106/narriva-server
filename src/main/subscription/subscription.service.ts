@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Stripe } from 'stripe';
 import { CreateSubscriptionDto, Plantype } from './dto/create-subscription.dto';
-import { Subscription as PrismaSubscription } from '@prisma/client';
-
-
 
 @Injectable()
 export class SubscriptionService {
@@ -15,14 +16,17 @@ export class SubscriptionService {
   constructor(private prisma: PrismaService) {}
 
   async createCheckoutSession(userId: string, dto: CreateSubscriptionDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findFirst({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const priceId = this.getPriceId(dto.plan);
 
-    const customer = await this.stripe.customers.create({ email: user.email });
+    const customer = await this.stripe.customers.create({
+      email: user.email,
+    });
 
     const session = await this.stripe.checkout.sessions.create({
+       payment_method_types: ['card'],
       mode: 'subscription',
       customer: customer.id,
       line_items: [
@@ -51,48 +55,53 @@ export class SubscriptionService {
     }
   }
 
-  async saveSubscriptionFromWebhook(event: Stripe.Event ,) {
+  async saveSubscriptionFromWebhook(event: Stripe.Event) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-
-      const customer = await this.stripe.customers.retrieve(session.customer as string) as Stripe.Customer;
-      const userEmail = customer.email;
-
-      const user = await this.prisma.user.findUnique({
-        where: { email: userEmail as string },
-      });
-
-      if (!user) throw new NotFoundException('User not found');
-
-      // Get subscription ID from session
       const subscriptionId = session.subscription as string;
-      // const stripeSub = await this.stripe.subscriptions.retrieve(subscriptionId);
-      const stripeSub = await this.stripe.subscriptions.retrieve(subscriptionId) as Stripe.Subscription;
+      const customerId = session.customer as string;
+      const sessionId = session.id;
 
-
-      const planName = stripeSub.items.data[0].price.nickname || 'unknown';
-
-      // Find plan in DB
-      const plan = await this.prisma.subscriptionPlan.findFirst({
-        where: { name: { equals: planName, mode: 'insensitive' } },
-      });
-
-      if (!plan) throw new NotFoundException('Plan not found in DB');
-
-      await this.prisma.subscription.create({
-        data: {
-          userId: user.id,
-          subscriptionPlanId: plan.id,
-          startDate: new Date(stripeSub.start_date * 1000),
-          // endDate: new Date(stripeSub.current_period_end * 1000),
-          stripeCustomerId: customer.id,
-          stripeSubscriptionId: stripeSub.id,
-          stripeCheckoutSessionId: session.id,
-          cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
-          status: 'PAID',
-        },
-      });
+      await this.createSubscription(subscriptionId, customerId, sessionId);
     }
+  }
+
+  async createSubscription(
+    stripeSubscriptionId: string,
+    stripeCustomerId: string,
+    stripeSessionId: string,
+  ) {
+    const stripeSub = await this.stripe.subscriptions.retrieve(stripeSubscriptionId);
+    const customer = await this.stripe.customers.retrieve(stripeCustomerId) as Stripe.Customer;
+
+    const userEmail = customer.email;
+    if (!userEmail) throw new NotFoundException('Email not found from Stripe customer');
+
+    const user = await this.prisma.user.findUnique({
+      where: { email: userEmail },
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const planName = stripeSub.items.data[0].price.nickname || 'unknown';
+    const plan = await this.prisma.subscriptionPlan.findFirst({
+      where: { name: { equals: planName, mode: 'insensitive' } },
+    });
+
+    if (!plan) throw new NotFoundException('Plan not found in DB');
+
+    return this.prisma.subscription.create({
+      data: {
+        userId: user.id,
+        subscriptionPlanId: plan.id,
+        startDate: new Date(stripeSub.start_date * 1000),
+        endDate: new Date((stripeSub as any).current_period_end * 1000),
+        stripeCustomerId: customer.id,
+        stripeSubscriptionId: stripeSub.id,
+        stripeCheckoutSessionId: stripeSessionId,
+        cancelAtPeriodEnd: stripeSub.cancel_at_period_end,
+        status: 'PAID',
+      },
+    });
   }
 
   async getUserSubscription(userId: string) {
@@ -107,11 +116,13 @@ export class SubscriptionService {
       where: { userId },
     });
 
-    if (!sub?.stripeSubscriptionId) throw new NotFoundException('No subscription found');
+    if (!sub?.stripeSubscriptionId)
+      throw new NotFoundException('No subscription found');
 
-    const canceled = await this.stripe.subscriptions.update(sub.stripeSubscriptionId, {
-      cancel_at_period_end: true,
-    });
+    const canceled = await this.stripe.subscriptions.update(
+      sub.stripeSubscriptionId,
+      { cancel_at_period_end: true },
+    );
 
     return { message: 'Subscription will cancel at period end', canceled };
   }

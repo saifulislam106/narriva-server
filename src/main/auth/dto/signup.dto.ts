@@ -6,14 +6,14 @@ import { IsString, IsEmail, MinLength } from 'class-validator';
 export class SignUpDto {
 
   @ApiProperty({
-    example: "Exumple",
+    example: "saiful",
     description: "This is name feild"
   })
   @IsString()
   name: string;
 
     @ApiProperty({
-    example: "exumple@gmail.com",
+    example: "saifulislam106915@gmail.com",
     description: "This is email feild"
   })
   @IsEmail()

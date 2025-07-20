@@ -17,7 +17,7 @@ COPY . .
 RUN npx prisma generate
 
 # Expose the port
-EXPOSE 8080
+EXPOSE 3000
 
 # Run in dev mode (hot-reload via volumes)
 CMD ["npm", "run", "start:dev"]

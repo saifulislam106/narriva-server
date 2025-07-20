@@ -4,7 +4,10 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody:true,
+    bodyParser:true
+  });
 
   const config = new DocumentBuilder()
     .setTitle('Narriva Server')
@@ -42,7 +45,7 @@ async function bootstrap() {
   // app.use(urlencoded({ extended: true }));
 
   // Raw body parser ONLY for Stripe Webhooks
-  app.use('/webhook', express.raw({ type: 'application/json' }));
+  // app.use('/webook', express.raw({ type: 'application/json' }));
   SwaggerModule.setup('api', app, documentFactory);
   await app.listen(process.env.PORT ?? 3000);
 }
