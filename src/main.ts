@@ -44,6 +44,6 @@ async function bootstrap() {
   // Raw body parser ONLY for Stripe Webhooks
   app.use('/webhook', express.raw({ type: 'application/json' }));
   SwaggerModule.setup('api', app, documentFactory);
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.PORT ?? 4000);
 }
 bootstrap();

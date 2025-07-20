@@ -84,7 +84,7 @@ export class SubscriptionService {
           userId: user.id,
           subscriptionPlanId: plan.id,
           startDate: new Date(stripeSub.start_date * 1000),
-          // endDate: new Date(stripeSub.current_period_end * 1000),
+          endDate: new Date((stripeSub as any).current_period_end * 1000),
           stripeCustomerId: customer.id,
           stripeSubscriptionId: stripeSub.id,
           stripeCheckoutSessionId: session.id,
