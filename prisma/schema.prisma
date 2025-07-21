@@ -14,24 +14,51 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  subscriptions    Subscription[]
+  id            String         @id @default(uuid())
+  email         String         @unique
+  name          String
+  password      String
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+  stripeCustomerId  String?
 }
 
-model SubscriptionPlan {
+model Subscription {
   id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String 
   name      String
-  description String
   price     String
-  features  String[]
-  subscriptions    Subscription[]
+  plan      PlanType
+  feature   String[]
+  startDate DateTime @default(now())
+  endDate   DateTime @default(now())
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
 }
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum PlanType {
+  DIGITAL
+  PREMIUM
+  DELUXE
+}
+
+// model SubscriptionPlan {
+//   id        String   @id @default(uuid())
+//   name      String
+//   description String
+//   price     String
+//   features  String[]
+//   subscriptions    Subscription[]
+// }
 
 // model Subscription {
 //   id        String   @id @default(uuid())
@@ -40,35 +67,11 @@ model SubscriptionPlan {
 //   subscriptionPlan      SubscriptionPlan     @relation(fields: [subscriptionPlanId], references: [id])
 //   subscriptionPlanId    String
 //   startDate DateTime @default(now())
+// stripeSubscriptionId   String?  @unique            
+// stripeCustomerId       String?              
+// stripeCheckoutSessionId String?             
+// cancelAtPeriodEnd      Boolean?     
 //   endDate   DateTime @default(now())
 //   status    SubscriptionStatus   @default(PENDING) 
 //   createdAt DateTime @default(now())
 // }
-model Subscription {
-  id                     String               @id @default(uuid())
-  user                   User                 @relation(fields: [userId], references: [id])
-  userId                 String
-  subscriptionPlan       SubscriptionPlan     @relation(fields: [subscriptionPlanId], references: [id])
-  subscriptionPlanId     String
-  startDate              DateTime             @default(now())
-  endDate                DateTime             @default(now())
-  status                 SubscriptionStatus   @default(PENDING)
-  stripeSubscriptionId   String?  @unique            
-  stripeCustomerId       String?              
-  stripeCheckoutSessionId String?             
-  cancelAtPeriodEnd      Boolean?        
-  createdAt              DateTime             @default(now())
-}
-
-
-enum Role {
-  ADMIN
-  USER
-}
-
-enum SubscriptionStatus {
-  PENDING
-  PAID
-  CANCELLED
-}
-
