@@ -22,12 +22,13 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   subscriptions Subscription[]
+  stripeCustomerId  String?
 }
 
 model Subscription {
   id        String   @id @default(uuid())
   user      User     @relation(fields: [userId], references: [id])
-  userId    String
+  userId    String 
   name      String
   price     String
   plan      PlanType
@@ -36,7 +37,7 @@ model Subscription {
   endDate   DateTime @default(now())
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-  updateAt  DateTime @updatedAt()
+  updateAt  DateTime @updatedAt
 }
 
 enum Role {
@@ -47,7 +48,7 @@ enum Role {
 enum PlanType {
   DIGITAL
   PREMIUM
-  DELUX
+  DELUXE
 }
 
 // model SubscriptionPlan {

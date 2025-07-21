@@ -24,37 +24,40 @@ export class SubscriptionService {
     // this.stripe = new Stripe(configService.getOrThrow('STRIPE_SECRET_KEY'));
   }
 
-  async createSubscription(dto: CreateSubscriptionDto) {
-    try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: dto.userId },
-      });
+async createSubscription(dto: CreateSubscriptionDto) {
+  try {
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+    });
 
-      if (!user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
 
-      const now = new Date();
-      const endDate = addDays(now, 30); // 30 days
+    const now = new Date();
+    const endDate = addDays(now, 30); // 30 days
 
-      const result = this.prisma.subscription.create({
-        data: {
-          name: dto.name,
-          price: dto.price,
-          userId: dto.userId,
-          plan: dto.plan as PlanType,
-          startDate: now,
-          endDate,
-        },
-      });
-      return ApiResponse.success(result, "Subscription created successfully");
-    } catch (error) {
-      return ApiResponse.error(error, "Subscription not created")
-    }
+    const result = await this.prisma.subscription.create({
+      data: {
+        name: dto.name,
+        price: dto.price,
+        userId: dto.userId,
+        plan: dto.plan as PlanType,
+        startDate: now,
+        endDate,
+        isActive: true, 
+      },
+    });
+
+    return ApiResponse.success(result, "Subscription created successfully");
+  } catch (error) {
+    return ApiResponse.error(error, "Subscription not created");
   }
+}
+
 
 
   async getAllSubscriptions() {
     try {
-      const result = this.prisma.subscription.findMany();
+      const result =await this.prisma.subscription.findMany();
       return ApiResponse.success(result, "Subscriptions fatched successfully");
     } catch (error) {
       return ApiResponse.error(error, "Subscriptions fatched faid")
@@ -64,7 +67,7 @@ export class SubscriptionService {
 
   async getSingleUserActiveSubscription(userId: string) {
     try {
-      const result = this.prisma.subscription.findFirst({
+      const result =await this.prisma.subscription.findFirst({
         where: {
           userId,
           isActive: true,
@@ -82,7 +85,7 @@ export class SubscriptionService {
 
   async updateSubscription(id: string, dto: UpdateSubscriptionDto) {
     try {
-      const result = this.prisma.subscription.update({
+      const result =await this.prisma.subscription.update({
         where: { id },
         data: dto,
       });
@@ -100,7 +103,7 @@ export class SubscriptionService {
       });
       if (!user) throw new NotFoundException('User not found');
 
-      const result = this.prisma.subscription.update({
+      const result =await this.prisma.subscription.update({
         where: { id },
         data: { isActive: false },
       });
