@@ -39,6 +39,7 @@ export class AuthService {
           email: loginDto.email
         }
       })
+      console.log(user?.id, "user id")
       if (!user) {
         throw new UnauthorizedException("User account not Found")
       }
@@ -47,19 +48,19 @@ export class AuthService {
         loginDto.password,
         user.password
       )
-      console.log("password", matchedPassword)
+      // console.log("password", matchedPassword)
 
       if (!matchedPassword) {
         throw new UnauthorizedException("Password dose not matched")
       }
 
       const payload = {
-        id: user.id,
+        sub: user.id,
         email: user.email,
         role: user.role
       }
       const token = await this.jwtService.signAsync(payload)
-      console.log("token", token)
+      // console.log("token", token)
       return ApiResponse.success(token, "login Successfully")
     } catch (error) {
       return ApiResponse.error(error, "Login faild")

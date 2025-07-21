@@ -11,13 +11,13 @@ export class AuthController {
 
   @Post('sign-up')
   async signUp(@Body() dto: SignUpDto) {
-    console.log(dto, "sing-up dto")
+    // console.log(dto, "sing-up dto")
     return await this.authService.signUp(dto);
   }
 
   @Post('login')
   async login(@Body() dto: LoginDto) {
-    console.log(dto, "login")
+    // console.log(dto, "login")
     return await this.authService.login(dto);
   }
 

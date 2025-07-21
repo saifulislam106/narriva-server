@@ -53,10 +53,10 @@ model Subscription {
   startDate              DateTime             @default(now())
   endDate                DateTime             @default(now())
   status                 SubscriptionStatus   @default(PENDING)
-  stripeSubscriptionId   String?  @unique            // NEW
-  stripeCustomerId       String?              // NEW
-  stripeCheckoutSessionId String?             // NEW
-  cancelAtPeriodEnd      Boolean?             // NEW
+  stripeSubscriptionId   String?  @unique            
+  stripeCustomerId       String?              
+  stripeCheckoutSessionId String?             
+  cancelAtPeriodEnd      Boolean?        
   createdAt              DateTime             @default(now())
 }
 
